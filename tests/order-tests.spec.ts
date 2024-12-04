@@ -4,7 +4,7 @@ import {AuthorizedPage} from "./pages/authorized-page";
 import {OrderFoundPage} from "./pages/order-found-page";
 
 
-test.beforeEach(async ({page,context}) => {
+test.beforeEach(async ({context}) => {
     const authUtils = new AuthUtils
     const token = await authUtils.getToken()
     await context.addInitScript((token) => {
@@ -13,13 +13,13 @@ test.beforeEach(async ({page,context}) => {
 })
 
 test.describe('ORDERS', async () => {
-    test('auth', async ({page, context}) => {
+    test('auth', async ({page}) => {
 
         const orderPage = new AuthorizedPage(page)
         await page.goto('https://fe-delivery.tallinn-learning.ee/');
         await expect(orderPage.statusButton).toBeVisible()
     });
-    test('Create order with mock api', async ({page, context}) => {
+    test('Create order with mock api', async ({page}) => {
 
         const orderPage = new AuthorizedPage(page)
         await page.route('**/orders', async (route: Route) => {
@@ -48,7 +48,7 @@ test.describe('ORDERS', async () => {
 
         await expect(page.getByTestId('orderSuccessfullyCreated-popup-close-button')).toBeVisible()
     });
-    test('Get OPEN order with mock api', async ({page, context}) => {
+    test('Get OPEN order with mock api', async ({page}) => {
 
         const orderPage = new AuthorizedPage(page)
         const orderFoundPage = new OrderFoundPage(page)
@@ -60,9 +60,9 @@ test.describe('ORDERS', async () => {
                     body: JSON.stringify({
                         "status": "OPEN",
                         "courierId": null,
-                        "customerName": "rqwr",
+                        "customerName": "TestName",
                         "customerPhone": "+37124806687",
-                        "comment": "234234234",
+                        "comment": "TestComment",
                         "id": 2947
                     })
                 })
@@ -75,11 +75,13 @@ test.describe('ORDERS', async () => {
         await orderPage.statusButton.click()
         await orderPage.orderSearchInputField.fill("2947")
         await orderPage.orderSearchPopUpButton.click()
-        await expect(orderFoundPage.uselessInput).toBeVisible()
-        await expect(orderFoundPage.orderStatusOpen).toHaveCSS("background-color", "rgb(253, 204, 0)")
-
+        await expect.soft(orderFoundPage.uselessInput).toBeVisible()
+        await expect.soft(orderFoundPage.orderStatusOpen).toHaveCSS("background-color", "rgb(253, 204, 0)")
+        await expect.soft(await orderFoundPage.displayedOrderName.textContent()).toBe("TestName")
+        await expect.soft(await orderFoundPage.displayedOrderPhone.textContent()).toBe("+37124806687")
+        await expect.soft(await orderFoundPage.displayedOrderComment.textContent()).toBe("TestComment")
     });
-    test('Get DELIVERED order with mock api', async ({page, context}) => {
+    test('Get DELIVERED order with mock api', async ({page}) => {
 
         const orderPage = new AuthorizedPage(page)
         const orderFoundPage = new OrderFoundPage(page)
@@ -91,9 +93,9 @@ test.describe('ORDERS', async () => {
                     body: JSON.stringify({
                         "status": "DELIVERED",
                         "courierId": null,
-                        "customerName": "rqwr",
+                        "customerName": "TestName",
                         "customerPhone": "+37124806687",
-                        "comment": "234234234",
+                        "comment": "TestComment",
                         "id": 2947
                     })
                 })
@@ -105,11 +107,14 @@ test.describe('ORDERS', async () => {
         await orderPage.statusButton.click()
         await orderPage.orderSearchInputField.fill("2947")
         await orderPage.orderSearchPopUpButton.click()
-        await expect(orderFoundPage.uselessInput).toBeVisible()
-        await expect(orderFoundPage.orderStatusDelivered).toHaveCSS("background-color", "rgb(253, 204, 0)")
+        await expect.soft(orderFoundPage.uselessInput).toBeVisible()
+        await expect.soft(orderFoundPage.orderStatusDelivered).toHaveCSS("background-color", "rgb(253, 204, 0)")
+        await expect.soft(await orderFoundPage.displayedOrderName.textContent()).toBe("TestName")
+        await expect.soft(await orderFoundPage.displayedOrderPhone.textContent()).toBe("+37124806687")
+        await expect.soft(await orderFoundPage.displayedOrderComment.textContent()).toBe("TestComment")
 
     });
-    test('Get 500 error with mock api', async ({page, context}) => {
+    test('Get 500 error with mock api', async ({page}) => {
 
         await page.route('**/orders/*', async (route: Route) => {
             if (route.request().method() === 'GET') {
